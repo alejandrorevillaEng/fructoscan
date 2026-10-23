@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f3f1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121416">
+  <meta name="description" content="Escanea productos del súper y descubre si tienen mucha fructosa o sorbitol. Para malabsorción de fructosa, IHF y dieta FODMAP. Gratis, sin registro y sin enviar tus datos a ningún servidor.">
+  <meta property="og:title" content="FructoScan: fructosa y sorbitol de un vistazo">
+  <meta property="og:description" content="Escanea un producto del súper y sabrás al momento si te conviene, y por qué.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://fructosa.pages.dev/icons/icon-512.png">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>FructoScan</title>
+  <link rel="preconnect" href="https://world.openfoodfacts.org" crossorigin>
+  <link rel="preconnect" href="https://images.openfoodfacts.org">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#view">Saltar al contenido</a>
+  <header class="top">
+    <a class="brand" href="#/"><img src="icons/logo.svg" alt="" width="30" height="30"> FructoScan</a>
+    <span id="offline" class="offline" hidden>Sin conexión</span>
+  </header>
+
+  <main id="view" class="view" tabindex="-1">
+    <noscript><p>FructoScan necesita JavaScript para funcionar.</p></noscript>
+  </main>
+
+  <nav class="nav" aria-label="Principal">
+    <a href="#/" data-icon="barcode"><span>Escanear</span></a>
+    <a href="#/recientes" data-icon="clock-counter-clockwise"><span>Recientes</span></a>
+    <a href="#/mibase" data-icon="list-bullets"><span>Mi base</span></a>
+    <a href="#/consejos" data-icon="lightbulb"><span>Consejos</span></a>
+    <a href="#/perfil" data-icon="user-circle"><span>Perfil</span></a>
+  </nav>
+
+  <div id="toast" class="toast" hidden></div>
+  <div id="live" class="visually-hidden" aria-live="polite"></div>
+</body>
+</html>

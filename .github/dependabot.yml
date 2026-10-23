@@ -1,0 +1,13 @@
+# La web no tiene dependencias de npm (las librerías van en vendor/); solo se vigilan las GitHub Actions.
+# cooldown: espera unos días antes de proponer una versión recién publicada, por si es maliciosa y la retiran.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    groups:
+      acciones:
+        patterns: ["*"]

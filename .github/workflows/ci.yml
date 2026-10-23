@@ -1,0 +1,50 @@
+# Tests en cada cambio y, si pasan en main, publicación en Cloudflare Pages (proyecto "fructosa").
+# Para publicar necesita dos secretos del repositorio (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN  token con permiso "Cloudflare Pages: Edit"
+#   CLOUDFLARE_ACCOUNT_ID id de la cuenta de Cloudflare
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests del motor de análisis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: lts/*
+      - run: npm test
+
+  publicar:
+    name: Publicar en Cloudflare Pages
+    needs: tests
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: produccion
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Preparar solo los ficheros de la web
+        run: |
+          mkdir dist
+          cp -r index.html sw.js _headers manifest.webmanifest css fonts icons js lang vendor dist/
+      - uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: pages deploy dist --project-name=fructosa --branch=main --commit-dirty=true

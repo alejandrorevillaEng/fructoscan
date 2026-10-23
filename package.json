@@ -1,0 +1,11 @@
+{
+  "name": "fructoscan",
+  "version": "0.10.1",
+  "private": true,
+  "description": "Escáner de productos del súper para personas con malabsorción de fructosa, IHF o dieta baja en FODMAP",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "python -m http.server 5180 --bind 127.0.0.1"
+  }
+}
