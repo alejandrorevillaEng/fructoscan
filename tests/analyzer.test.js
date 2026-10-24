@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { analyze, overall, detect, normalize, splitTopLevel, lev, cleanOcrText, findSugars, highlightSpans } from '../js/analyzer.js';
 import { searchFoods, foodLevel } from '../js/foods.js';
-import { isValidEAN, cleanCode, isInStoreCode } from '../js/ean.js';
+import { isValidEAN, cleanCode, isInStoreCode, findEAN } from '../js/ean.js';
 
 const NUTELLA = 'Azúcar, aceite vegetal (palma), avellanas 13%, leche desnatada en polvo 8,7%, cacao magro 7,4%, emulgente: lecitinas (soja), vainillina.';
 const CHICLES = 'Edulcorantes (sorbitol, maltitol, E-420, aspartamo), goma base, aromas, jarabe de glucosa y fructosa, espesante (goma arábiga). Un consumo excesivo puede producir efectos laxantes.';
@@ -158,6 +158,21 @@ describe('códigos de barras', () => {
   });
   test('limpia espacios y detecta códigos al peso', () => {
     assert.equal(cleanCode('3 017620 422003'), '3017620422003');
+  });
+
+  test('saca un código válido de los números leídos con la cámara', () => {
+    assert.equal(findEAN('3 017620 422003'), '3017620422003', 'con los espacios del dibujo del código');
+    assert.equal(findEAN('ah 3 017620 422003 xx'), '3017620422003', 'con basura alrededor');
+    assert.equal(findEAN('3017620\n422003'), '3017620422003', 'partido en dos líneas');
+    assert.equal(findEAN('9 7 8 0 3 0 6 4 0 6 1 5 7'), '9780306406157', 'dígito a dígito');
+    assert.equal(findEAN('LOTE 240512 3 017620 422003'), '3017620422003', 'ignora otros números de la etiqueta');
+    assert.equal(findEAN('9638 5074'), '96385074', 'EAN-8');
+  });
+
+  test('si un número está mal leído no se inventa un código', () => {
+    assert.equal(findEAN('3 017620 422004'), null, 'el dígito de control no cuadra');
+    assert.equal(findEAN('12345'), null);
+    assert.equal(findEAN(''), null);
     assert.equal(isInStoreCode('2000000000008'), true);
   });
 });

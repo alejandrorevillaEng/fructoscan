@@ -19,7 +19,7 @@ Nace de un problema real: hacer la compra leyendo etiquetas una a una. La fructo
 
 ## Qué hace
 
-- **Escanea el código de barras** con la cámara (o se escribe a mano) y busca el producto en [Open Food Facts](https://es.openfoodfacts.org).
+- **Escanea el código de barras** con la cámara (o se escribe a mano) y busca el producto en [Open Food Facts](https://es.openfoodfacts.org). Si las barras salen borrosas, lee también los números de debajo, y solo acepta un código si su dígito de control cuadra.
 - **Veredicto por producto** (Apto, Con moderación o Mejor evitar) con dos indicadores, fructosa y sorbitol, y el porqué ingrediente a ingrediente, resaltado en la lista.
 - **Tres perfiles:** malabsorción, IHF (estricto: cualquier fructosa, sacarosa o sorbitol es un no) y FODMAP (añade fructanos: trigo, cebolla, ajo…).
 - **Si el producto no está**, lee la lista de ingredientes de una foto (OCR dentro del móvil) o se escribe a mano, y se guarda para la próxima vez.

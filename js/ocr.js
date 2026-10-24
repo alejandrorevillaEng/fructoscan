@@ -3,25 +3,38 @@
 import { cleanOcrText, findSugars } from './analyzer.js';
 
 let workerP = null;
+let digitsP = null;
 let progressCb = null;
 
+async function createWorker(logger) {
+  const { default: Tesseract } = await import('../vendor/tesseract/tesseract.esm.min.js');
+  const base = new URL('../', import.meta.url);
+  return Tesseract.createWorker('spa', 1, {
+    workerPath: new URL('vendor/tesseract/worker.min.js', base).href,
+    corePath: new URL('vendor/tesseract/', base).href,
+    langPath: new URL('lang', base).href,
+    gzip: false,
+    workerBlobURL: false,
+    cacheMethod: 'write',
+    logger,
+  });
+}
+
 async function getWorker() {
-  if (!workerP) {
-    workerP = (async () => {
-      const { default: Tesseract } = await import('../vendor/tesseract/tesseract.esm.min.js');
-      const base = new URL('../', import.meta.url);
-      return Tesseract.createWorker('spa', 1, {
-        workerPath: new URL('vendor/tesseract/worker.min.js', base).href,
-        corePath: new URL('vendor/tesseract/', base).href,
-        langPath: new URL('lang', base).href,
-        gzip: false,
-        workerBlobURL: false,
-        cacheMethod: 'write',
-        logger: (m) => progressCb?.(m),
-      });
-    })().catch((e) => { workerP = null; throw e; });
-  }
+  if (!workerP) workerP = createWorker((m) => progressCb?.(m)).catch((e) => { workerP = null; throw e; });
   return workerP;
+}
+
+// Lector aparte para los números del código de barras: solo cifras, sin tocar el de los ingredientes
+async function getDigitsWorker() {
+  if (!digitsP) {
+    digitsP = (async () => {
+      const w = await createWorker();
+      await w.setParameters({ tessedit_char_whitelist: '0123456789', tessedit_pageseg_mode: '6' });
+      return w;
+    })().catch((e) => { digitsP = null; throw e; });
+  }
+  return digitsP;
 }
 
 // Prepara la imagen: tamaño adecuado, escala de grises, invertir si el texto es claro sobre fondo oscuro,
@@ -35,6 +48,12 @@ export async function preprocess(file) {
   const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.drawImage(bmp, 0, 0, w, hgt);
   bmp.close?.();
+  realzar(ctx, w, hgt);
+  return c;
+}
+
+// Escala de grises, invertir si el texto es claro sobre fondo oscuro y estirar el contraste
+function realzar(ctx, w, hgt) {
   const img = ctx.getImageData(0, 0, w, hgt); const d = img.data;
   const hist = new Uint32Array(256); let sum = 0;
   for (let i = 0; i < d.length; i += 4) {
@@ -52,7 +71,21 @@ export async function preprocess(file) {
     d[i] = d[i + 1] = d[i + 2] = g;
   }
   ctx.putImageData(img, 0, 0);
-  return c;
+}
+
+// Lee las cifras de la franja central de un fotograma de la cámara (donde caen las barras y sus números)
+export async function readDigits(video) {
+  const vw = video.videoWidth; const vh = video.videoHeight;
+  if (!vw || !vh) return '';
+  const sx = vw * 0.1; const sy = vh * 0.28; const sw = vw * 0.8; const sh = vh * 0.44;
+  const escala = Math.min(2, 1100 / sw);
+  const c = document.createElement('canvas'); c.width = Math.round(sw * escala); c.height = Math.round(sh * escala);
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  realzar(ctx, c.width, c.height);
+  const worker = await getDigitsWorker();
+  const { data } = await worker.recognize(c);
+  return data.text || '';
 }
 
 /**

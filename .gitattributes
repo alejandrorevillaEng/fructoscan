@@ -1,0 +1,6 @@
+# Librerías y datos de terceros: se guardan tal cual, sin convertir saltos de línea
+vendor/** -text
+lang/** -text
+*.png binary
+*.jpg binary
+*.woff2 binary

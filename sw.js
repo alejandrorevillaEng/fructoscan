@@ -2,7 +2,7 @@
 // - Interfaz: se guarda al instalar.
 // - OCR (Tesseract + idioma): se guarda la primera vez que se usa.
 // - Nunca se guardan aquí respuestas de Open Food Facts (eso lo gestiona la app en IndexedDB).
-const VERSION = 'fructoscan-v0.10.1';
+const VERSION = 'fructoscan-v0.11.0';
 const SHELL = [
   './', './index.html', './css/app.css', './manifest.webmanifest',
   './js/app.js', './js/analyzer.js', './js/rules.js', './js/dom.js', './js/store.js', './js/off.js', './js/ean.js',

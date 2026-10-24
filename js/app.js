@@ -159,7 +159,9 @@ async function viewScan() {
   async function start() {
     startBtn.hidden = true; status.textContent = 'Abriendo la cámara…';
     try {
-      state.scanner = await startScanner(video, onCode);
+      state.scanner = await startScanner(video, onCode, {
+        onDigitsMode: () => { if (!peek) status.textContent = '¿Se ve borroso? Acerca también los números de debajo de las barras: los leo igual.'; },
+      });
       box.classList.add('on');
       status.textContent = 'Apunta al código de barras del producto';
       if (state.scanner.torchSupported) {

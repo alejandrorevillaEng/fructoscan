@@ -1,8 +1,12 @@
 // Lector de códigos de barras con la cámara.
 // Usa el lector nativo del navegador si existe (Chrome Android) y si no, ZXing (Safari/iPhone, Firefox).
-import { isValidEAN } from './ean.js';
+// Si las barras salen borrosas y no se leen, prueba también con los números de debajo (OCR en el móvil).
+import { isValidEAN, findEAN } from './ean.js';
 
-export async function startScanner(video, onCode) {
+const ESPERA_NUMEROS = 2500;   // ms sin leer las barras antes de probar con los números
+const CADA_NUMEROS = 1200;     // ms entre lecturas de números (el OCR es más pesado que el lector de barras)
+
+export async function startScanner(video, onCode, { onDigitsMode } = {}) {
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('nocamera');
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -22,6 +26,23 @@ export async function startScanner(video, onCode) {
     last = code; lastAt = now;
     onCode(code);
   };
+
+  // Números de debajo de las barras: solo cuando el lector de barras lleva un rato sin leer nada
+  let numerosTimer = 0; let leyendo = false;
+  const probarNumeros = async () => {
+    if (stopped) return;
+    if (!leyendo && Date.now() - lastAt > ESPERA_NUMEROS && video.readyState >= 2) {
+      leyendo = true;
+      try {
+        const { readDigits } = await import('./ocr.js');
+        const codigo = findEAN(await readDigits(video));
+        if (codigo && !stopped) emit(codigo);
+      } catch { /* sin OCR en este navegador: seguimos solo con las barras */ }
+      leyendo = false;
+    }
+    if (!stopped) numerosTimer = setTimeout(probarNumeros, CADA_NUMEROS);
+  };
+  numerosTimer = setTimeout(() => { if (!stopped) { onDigitsMode?.(); probarNumeros(); } }, ESPERA_NUMEROS);
 
   let native = false;
   if ('BarcodeDetector' in window) {
@@ -56,6 +77,7 @@ export async function startScanner(video, onCode) {
     stop() {
       stopped = true;
       cancelAnimationFrame(raf);
+      clearTimeout(numerosTimer);
       try { controls?.stop(); } catch { /* ya parado */ }
       stream.getTracks().forEach((tr) => tr.stop());
       video.srcObject = null;
